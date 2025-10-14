@@ -1,0 +1,185 @@
+# =============================================
+# 🚀 Franz Platform Infrastructure Pipeline
+# =============================================
+# Project: AjnaTellus / Franz
+# Repo: Franz.GitOps
+# =============================================
+
+name: Franz.Infra.$(Date:yyyyMMdd)$(Rev:.r)
+trigger: none
+pr: none
+
+# =============================================
+# 🔹 Parameters
+# =============================================
+parameters:
+  - name: environment
+    type: string
+    default: dev
+    values: [ dev, staging, prod ]
+
+  - name: databaseType
+    type: string
+    default: single
+    values: [ single, multi ]
+
+  - name: eventStorageType
+    type: string
+    default: Kafka
+    values: [ Kafka, CosmosDB, MongoDB ]
+
+  - name: entityStorageType
+    type: string
+    default: SQLServer
+    values: [ PostgreSQL, MariaDB, MySQL, SQLServer, Oracle ]
+
+  - name: messagingType
+    type: string
+    default: Kafka
+    values: [ Kafka, RabbitMQ, Both, None ]
+
+  - name: containerImage
+    type: string
+    default: ""   # injected from build pipeline
+
+# =============================================
+# 🔹 Variables
+# =============================================
+variables:
+  - group: Variables-${{ parameters.environment }}
+
+  # Decide orchestrator automatically by environment
+  - name: containerOrchestrator
+    ${{ if eq(parameters.environment, 'prod') }}:
+      value: 'aks'
+    ${{ elseif eq(parameters.environment, 'staging') }}:
+      value: 'aks'
+    ${{ else }}:
+      value: 'none'
+
+# =============================================
+# 🔹 Jobs
+# =============================================
+jobs:
+- job: DeployInfra
+  displayName: "🏗️ Franz Infrastructure — ${{ parameters.environment }}"
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  steps:
+  # =============================
+  # 🔑 Fetch Secrets (optional)
+  # =============================
+  - task: AzureCLI@2
+    displayName: "🔑 Fetch Secrets from Key Vault"
+    condition: ne('${{ parameters.environment }}','')
+    inputs:
+      azureSubscription: $(azureServiceConnection)
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        echo "🔍 Fetching DB secret..."
+        DB_CONNECTION_STRING=$(az keyvault secret show \
+          --name DBConnectionString \
+          --vault-name $(keyVaultName) \
+          --query value -o tsv || echo "")
+        echo "##vso[task.setvariable variable=DB_CONNECTION_STRING;isSecret=true]$DB_CONNECTION_STRING"
+
+  # =============================
+  # 🚀 Deploy Infra with Bicep
+  # =============================
+  - task: AzureCLI@2
+    displayName: "🚀 Deploy Franz Infra via Bicep"
+    inputs:
+      azureSubscription: $(azureServiceConnection)
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        echo "===================================="
+        echo "🌍 Environment:   ${{ parameters.environment }}"
+        echo "🗄️ DB Type:       ${{ parameters.databaseType }}"
+        echo "📂 Event Storage: ${{ parameters.eventStorageType }}"
+        echo "📂 Entity DB:     ${{ parameters.entityStorageType }}"
+        echo "📩 Messaging:     ${{ parameters.messagingType }}"
+        echo "☸️ Orchestrator:  $(containerOrchestrator)"
+        echo "🐳 Image:         ${{ parameters.containerImage }}"
+        echo "===================================="
+
+        az deployment group create \
+          --resource-group $(resourceGroupName) \
+          --name franz-main-${{ parameters.environment }} \
+          --template-file Infrastructure/AzureDevOps-Bicep/main.bicep \
+          --mode Incremental \
+          --only-show-errors \
+          --parameters \
+            environment=${{ parameters.environment }} \
+            databaseType=${{ parameters.databaseType }} \
+            eventStorageType=${{ parameters.eventStorageType }} \
+            entityStorageType=${{ parameters.entityStorageType }} \
+            messagingType=${{ parameters.messagingType }} \
+            containerImage=${{ parameters.containerImage }} \
+            containerOrchestrator=$(containerOrchestrator) \
+            adminPassword=$(adminPassword) \
+            adminUser=$(adminUser) \
+            DBConnectionString=$(DB_CONNECTION_STRING)
+
+  # =============================
+  # 📤 Capture & Export Outputs
+  # =============================
+  - task: AzureCLI@2
+    displayName: "📤 Capture Bicep Outputs"
+    inputs:
+      azureSubscription: $(azureServiceConnection)
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        echo "📦 Collecting deployment outputs..."
+        outputs=$(az deployment group show \
+          -g $(resourceGroupName) \
+          -n franz-main-${{ parameters.environment }} \
+          --query properties.outputs -o json)
+
+        echo "🔎 Outputs:"
+        echo "$outputs"
+
+        # Export outputs as pipeline variables
+        echo $outputs | jq -r 'to_entries|.[]| "##vso[task.setvariable variable=\(.key);isOutput=true]\(.value.value)"'
+
+        # Save outputs to artifact file
+        echo $outputs > $(Build.ArtifactStagingDirectory)/infra-outputs-${{ parameters.environment }}.json
+
+  # =============================
+  # 📦 Publish Outputs
+  # =============================
+  - publish: $(Build.ArtifactStagingDirectory)/infra-outputs-${{ parameters.environment }}.json
+    artifact: franz-infra-${{ parameters.environment }}
+    displayName: "📦 Publish Franz Infra Outputs"
+
+  # =============================
+  # 🔁 Trigger GitOps Sync (AjnaTellus)
+  # =============================
+  - ${{ if or(eq(variables.containerOrchestrator, 'aks'), eq(parameters.environment, 'prod')) }}:
+    - task: InvokeRESTAPI@1
+      displayName: "🔁 Trigger Franz.GitOps Sync"
+      inputs:
+        connectionType: 'connectedServiceName'
+        serviceConnection: $(azureServiceConnection)
+        method: POST
+        urlSuffix: '_apis/pipelines?api-version=7.1-preview.1'
+        headers: |
+          Content-Type: application/json
+        body: |
+          {
+            "resources": {
+              "repositories": {
+                "self": {
+                  "refName": "refs/heads/main"
+                }
+              }
+            },
+            "templateParameters": {
+              "environment": "${{ parameters.environment }}"
+            }
+          }
+        waitForCompletion: false
+        urlBase: "https://dev.azure.com/AjnaTellus/Franz/_apis/pipelines/Franz.GitOps"

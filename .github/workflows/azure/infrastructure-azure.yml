@@ -1,0 +1,184 @@
+# =============================================
+# 🚀 Franz Platform — Generic Azure Infra Deployment
+# =============================================
+# Universal GitHub Actions pipeline to deploy Franz infrastructure
+# to Azure via Bicep templates located in Infrastructure/AzureDevOps-Bicep/.
+# Automatically decides whether to include AKS or not.
+# =============================================
+
+name: "Deploy Franz Infrastructure (Generic Azure)"
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deployment environment"
+        required: true
+        default: "dev"
+        type: choice
+        options:
+          - dev
+          - staging
+          - prod
+      databaseType:
+        description: "Database Type"
+        required: true
+        default: "single"
+        type: choice
+        options:
+          - single
+          - multi
+      eventStorageType:
+        description: "Event Storage Type (only used for multi-DB)"
+        required: false
+        default: "Kafka"
+        type: choice
+        options:
+          - Kafka
+          - CosmosDB
+          - MongoDB
+      entityStorageType:
+        description: "Entity Storage Type"
+        required: true
+        default: "SQLServer"
+        type: choice
+        options:
+          - PostgreSQL
+          - MariaDB
+          - MySQL
+          - SQLServer
+          - Oracle
+      messagingType:
+        description: "Messaging Broker"
+        required: true
+        default: "Kafka"
+        type: choice
+        options:
+          - None
+          - Kafka
+          - RabbitMQ
+          - Both
+
+env:
+  RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
+  KEY_VAULT_NAME: ${{ secrets.AZURE_KEY_VAULT_NAME }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+
+jobs:
+  deploy:
+    name: "☁️ Deploy Franz Infrastructure"
+    runs-on: ubuntu-latest
+
+    steps:
+      # ==========================================
+      # 📥 Checkout
+      # ==========================================
+      - name: "📥 Checkout repository"
+        uses: actions/checkout@v4
+
+      # ==========================================
+      # 🔑 Azure Login
+      # ==========================================
+      - name: "🔑 Login to Azure"
+        uses: azure/login@v2
+        with:
+          creds: |
+            {
+              "clientId": "${{ env.AZURE_CLIENT_ID }}",
+              "clientSecret": "${{ env.AZURE_CLIENT_SECRET }}",
+              "subscriptionId": "${{ env.AZURE_SUBSCRIPTION_ID }}",
+              "tenantId": "${{ env.AZURE_TENANT_ID }}"
+            }
+
+      # ==========================================
+      # 🔐 Fetch Secrets from Azure Key Vault
+      # ==========================================
+      - name: "🔐 Fetch secrets from Key Vault"
+        id: secrets
+        run: |
+          echo "🔎 Retrieving secrets from Key Vault..."
+          DB_CONN=$(az keyvault secret show \
+            --name DBConnectionString \
+            --vault-name "$KEY_VAULT_NAME" \
+            --query value -o tsv)
+          ADMIN_USER=$(az keyvault secret show \
+            --name DBAdminUser \
+            --vault-name "$KEY_VAULT_NAME" \
+            --query value -o tsv || echo "dbadmin")
+          ADMIN_PASS=$(az keyvault secret show \
+            --name DBAdminPassword \
+            --vault-name "$KEY_VAULT_NAME" \
+            --query value -o tsv)
+
+          echo "dbConnectionString=$DB_CONN" >> $GITHUB_OUTPUT
+          echo "adminUser=$ADMIN_USER" >> $GITHUB_OUTPUT
+          echo "adminPassword=$ADMIN_PASS" >> $GITHUB_OUTPUT
+
+      # ==========================================
+      # ☸️ Determine Container Orchestrator
+      # ==========================================
+      - name: "☸️ Determine Container Orchestrator"
+        id: orchestrator
+        run: |
+          env="${{ github.event.inputs.environment }}"
+          if [[ "$env" == "prod" || "$env" == "staging" ]]; then
+            echo "containerOrchestrator=aks" >> $GITHUB_OUTPUT
+            echo "AKS will be deployed for $env environment."
+          else
+            echo "containerOrchestrator=none" >> $GITHUB_OUTPUT
+            echo "Skipping AKS for $env environment."
+          fi
+
+      # ==========================================
+      # 🚀 Deploy with Bicep
+      # ==========================================
+      - name: "🚀 Deploy Franz Infrastructure with Bicep"
+        run: |
+          DEPLOY_NAME="franz-${{ github.event.inputs.environment }}-$(date +'%Y%m%d%H%M%S')"
+          echo "🚀 Starting deployment: $DEPLOY_NAME"
+
+          az deployment group create \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$DEPLOY_NAME" \
+            --template-file "Infrastructure/AzureDevOps-Bicep/main.bicep" \
+            --mode Incremental \
+            --only-show-errors \
+            --parameters \
+              environment="${{ github.event.inputs.environment }}" \
+              databaseType="${{ github.event.inputs.databaseType }}" \
+              eventStorageType="${{ github.event.inputs.eventStorageType }}" \
+              entityStorageType="${{ github.event.inputs.entityStorageType }}" \
+              messagingType="${{ github.event.inputs.messagingType }}" \
+              containerOrchestrator="${{ steps.orchestrator.outputs.containerOrchestrator }}" \
+              adminUser="${{ steps.secrets.outputs.adminUser }}" \
+              adminPassword="${{ steps.secrets.outputs.adminPassword }}" \
+              DBConnectionString="${{ steps.secrets.outputs.dbConnectionString }}"
+
+      # ==========================================
+      # 📦 Save Outputs
+      # ==========================================
+      - name: "📦 Save Deployment Outputs"
+        id: outputs
+        run: |
+          DEPLOY_NAME=$(az deployment group list --resource-group "$RESOURCE_GROUP" --query "[0].name" -o tsv)
+          echo "💾 Capturing outputs from: $DEPLOY_NAME"
+
+          az deployment group show \
+            --resource-group "$RESOURCE_GROUP" \
+            --name "$DEPLOY_NAME" \
+            --query properties.outputs -o json > deployment-outputs.json
+
+          cat deployment-outputs.json
+
+      # ==========================================
+      # ⬆️ Upload Outputs as Artifact
+      # ==========================================
+      - name: "⬆️ Upload Deployment Outputs"
+        uses: actions/upload-artifact@v4
+        with:
+          name: franz-infra-${{ github.event.inputs.environment }}-outputs
+          path: deployment-outputs.json
+          retention-days: 14
