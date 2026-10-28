@@ -8,12 +8,12 @@ variable "microservice_name" {
 }
 
 variable "database_type" {
-  description = <<EOT
-Database type to deploy.
-Options:
-- Relational: postgres, mysql, mariadb, oracle, sqlserver
-- NoSQL: dynamodb
-EOT
+  description = <<-EOT
+    Database type to deploy.
+    Options:
+    - Relational: postgres, mysql, mariadb, oracle, sqlserver
+    - NoSQL: dynamodb
+  EOT
   type = string
 }
 
@@ -34,7 +34,7 @@ variable "db_instance_class" {
 }
 
 variable "db_version" {
-  description = "Database engine version for RDS"
+  description = "Database version for RDS instances"
   type        = string
 }
 
@@ -44,18 +44,18 @@ variable "db_name" {
 }
 
 variable "db_username" {
-  description = "Master username for RDS"
+  description = "Database username for RDS"
   type        = string
 }
 
 variable "db_password" {
-  description = "Master password for RDS"
+  description = "Database password for RDS"
   type        = string
   sensitive   = true
 }
 
 variable "db_public_access" {
-  description = "Should the RDS instance be publicly accessible?"
+  description = "Whether the RDS instance is publicly accessible"
   type        = bool
   default     = false
 }
@@ -65,7 +65,7 @@ variable "db_public_access" {
 #######################################
 
 variable "dynamodb_table_name" {
-  description = "Base name of the DynamoDB table"
+  description = "Base name for the DynamoDB table"
   type        = string
   default     = "microservice-table"
 }
