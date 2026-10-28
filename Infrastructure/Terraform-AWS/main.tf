@@ -23,17 +23,17 @@ module "rabbitmq" {
   count              = contains(["RabbitMQ", "Both"], var.messaging_type) ? 1 : 0
   source             = "./modules/RabbitMQ"
 
-  enable_rabbitmq     = true
-  microservice_name   = var.microservice_name
-  common_tags         = var.common_tags
-  rabbitmq_user       = var.rabbitmq_user
-  rabbitmq_password   = var.rabbitmq_password
-  security_group_ids  = [module.networking.security_group_id]
-  subnet_ids          = [module.networking.public_subnet_id]
+  enable_rabbitmq    = true
+  microservice_name  = var.microservice_name
+  common_tags        = var.common_tags
+  rabbitmq_user      = var.rabbitmq_user
+  rabbitmq_password  = var.rabbitmq_password
+  security_group_ids = [module.networking.security_group_id]
+  subnet_ids         = [module.networking.public_subnet_id]
 }
 
 module "database" {
-  source             = "./modules/database"
+  source               = "./modules/database"
 
   microservice_name    = var.microservice_name
   common_tags          = var.common_tags
