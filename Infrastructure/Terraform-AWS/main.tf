@@ -12,7 +12,7 @@ module "kafka" {
 
 # ✅ RabbitMQ (Amazon MQ)
 module "rabbitmq" {
-  source = "./modules/rabbitmq"
+  source = "./modules/RabbitMQ"
   count  = var.messaging_type == "RabbitMQ" || var.messaging_type == "Both" ? 1 : 0
 
   broker_name     = "${var.microservice_name}-rabbitmq"
