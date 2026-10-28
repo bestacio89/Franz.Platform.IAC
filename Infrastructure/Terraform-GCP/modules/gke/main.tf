@@ -41,7 +41,7 @@ resource "kubernetes_deployment" "microservice_deployment" {
           name  = var.microservice_name
           image = var.container_image
 
-          ports {
+          port {
             container_port = var.container_port
           }
 
