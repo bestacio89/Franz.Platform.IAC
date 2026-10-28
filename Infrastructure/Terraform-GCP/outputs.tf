@@ -11,7 +11,7 @@ output "database_endpoint" {
     var.database_type == "mongo_vm" ? module.database.mongo_vm_public_ip :
     module.database.firestore_database_name
   )
-  sensitive = var.database_type == "mongo_atlas"
+  sensitive = true
 }
 
 output "messaging_summary" {
