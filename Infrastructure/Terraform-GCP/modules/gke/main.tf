@@ -9,9 +9,7 @@ resource "google_container_cluster" "microservice_gke" {
     node_config {
       machine_type = "e2-medium"
       disk_size_gb = 20
-      oauth_scopes = [
-        "https://www.googleapis.com/auth/cloud-platform"
-      ]
+      oauth_scopes = ["https://www.googleapis.com/auth/cloud-platform"]
     }
   }
 }
@@ -47,7 +45,6 @@ resource "kubernetes_deployment" "microservice_deployment" {
             container_port = var.container_port
           }
 
-          # Environment variables
           dynamic "env" {
             for_each = var.env_vars
             content {
@@ -56,15 +53,14 @@ resource "kubernetes_deployment" "microservice_deployment" {
             }
           }
 
-          # Secrets (envFrom style)
           dynamic "env" {
             for_each = var.secrets
             content {
               name = env.key
               value_from {
                 secret_key_ref {
-                  name = env.value   # secret name
-                  key  = env.key     # secret key inside secret
+                  name = env.value
+                  key  = env.key
                 }
               }
             }
