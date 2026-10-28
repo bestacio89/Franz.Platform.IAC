@@ -65,7 +65,7 @@ jobs:
         uses: azure/CLI@v2
         with:
           azcliversion: latest
-          inlineScript: az bicep install
+          inlineScript: |
+            az bicep install
+            az bicep build --file Infrastructure/AzureDevOps-Bicep/main.bicep --stdout > /dev/null
 
-      - name: Build Bicep entry point
-        run: az bicep build --file Infrastructure/AzureDevOps-Bicep/main.bicep --stdout > /dev/null
