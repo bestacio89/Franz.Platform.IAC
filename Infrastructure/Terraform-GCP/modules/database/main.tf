@@ -1,4 +1,4 @@
-# ✅ Variables
+# Variables
 variable "database_type" {
   description = "Type of database (cloudsql, firestore, mongo_atlas, mongo_vm)"
   type        = string
@@ -44,6 +44,7 @@ variable "mongodb_atlas_public_key" {
 variable "mongodb_atlas_private_key" {
   description = "MongoDB Atlas Private Key"
   type        = string
+  sensitive   = true
 }
 
 variable "mongodb_org_id" {
@@ -57,20 +58,20 @@ variable "firestore_enabled" {
   default     = false
 }
 
-# ✅ Cloud SQL (Relational Database)
 resource "google_sql_database_instance" "microservice_db" {
-  count           = var.database_type == "cloudsql" ? 1 : 0
-  name            = var.db_instance_name
-  region          = var.db_region
+  count            = var.database_type == "cloudsql" ? 1 : 0
+  name             = var.db_instance_name
+  region           = var.db_region
   database_version = var.db_version
 
   settings {
-    tier              = var.db_tier
-    disk_autoresize   = true
-    disk_size         = 20
-    availability_type = "REGIONAL"  # High availability
+    tier            = var.db_tier
+    disk_autoresize = true
+    disk_size       = 20
+    availability_type = "REGIONAL"
+
     backup_configuration {
-      enabled = true
+      enabled    = true
       start_time = "03:00"
     }
   }
@@ -89,7 +90,6 @@ resource "google_sql_database" "database" {
   instance = google_sql_database_instance.microservice_db[0].name
 }
 
-# ✅ Firestore (NoSQL)
 resource "google_firestore_database" "microservice_firestore" {
   count       = var.database_type == "firestore" ? 1 : 0
   name        = "microservice-database"
@@ -97,42 +97,40 @@ resource "google_firestore_database" "microservice_firestore" {
   type        = "FIRESTORE_NATIVE"
 }
 
-# ✅ MongoDB Atlas (Managed MongoDB on GCP)
 provider "mongodbatlas" {
   public_key  = var.mongodb_atlas_public_key
   private_key = var.mongodb_atlas_private_key
 }
 
 resource "mongodbatlas_project" "mongo_project" {
-  count = var.database_type == "mongo_atlas" ? 1 : 0
+  count  = var.database_type == "mongo_atlas" ? 1 : 0
   name   = "microservice-mongo"
   org_id = var.mongodb_org_id
 }
 
 resource "mongodbatlas_cluster" "mongo_cluster" {
-  count = var.database_type == "mongo_atlas" ? 1 : 0
-  project_id = mongodbatlas_project.mongo_project[0].id
-  name       = "microservice-cluster"
-  provider_name = "GCP"
-  backing_provider_name = "GCP"
-
-  provider_region_name = var.db_region
-  provider_instance_size_name = "M10"  # Choose instance size
+  count                  = var.database_type == "mongo_atlas" ? 1 : 0
+  project_id             = mongodbatlas_project.mongo_project[0].id
+  name                   = "microservice-cluster"
+  provider_name          = "GCP"
+  backing_provider_name  = "GCP"
+  provider_region_name   = var.db_region
+  provider_instance_size_name = "M10"
   mongo_db_major_version = "6.0"
 }
 
 resource "mongodbatlas_database_user" "mongo_user" {
-  count = var.database_type == "mongo_atlas" ? 1 : 0
-  username = var.db_username
-  password = var.db_password
+  count      = var.database_type == "mongo_atlas" ? 1 : 0
+  username   = var.db_username
+  password   = var.db_password
   project_id = mongodbatlas_project.mongo_project[0].id
+
   roles {
-    role_name = "readWrite"
+    role_name     = "readWrite"
     database_name = "microservice-db"
   }
 }
 
-# ✅ Self-Managed MongoDB on GCP Compute Engine (VM)
 resource "google_compute_instance" "mongo_vm" {
   count        = var.database_type == "mongo_vm" ? 1 : 0
   name         = "mongodb-instance"
@@ -148,15 +146,14 @@ resource "google_compute_instance" "mongo_vm" {
 
   network_interface {
     network = "default"
-    access_config {
-    }
+    access_config {}
   }
 
-  metadata_startup_script = <<EOT
-  #!/bin/bash
-  sudo apt update
-  sudo apt install -y mongodb
-  sudo systemctl start mongodb
-  sudo systemctl enable mongodb
+  metadata_startup_script = <<-EOT
+    #!/bin/bash
+    sudo apt update
+    sudo apt install -y mongodb
+    sudo systemctl start mongodb
+    sudo systemctl enable mongodb
   EOT
 }
