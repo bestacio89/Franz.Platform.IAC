@@ -5,10 +5,10 @@ resource "google_sql_database_instance" "microservice_db" {
   database_version = var.db_version
 
   settings {
-    tier            = var.db_tier
-    availability_type = "REGIONAL"
-    disk_autoresize   = true
-    disk_size         = 20
+    tier                = var.db_tier
+    availability_type   = "REGIONAL"
+    disk_autoresize     = true
+    disk_size           = 20
 
     backup_configuration {
       enabled    = true
