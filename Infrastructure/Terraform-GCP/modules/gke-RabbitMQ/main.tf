@@ -1,14 +1,3 @@
-provider "google" {
-  project = var.project_id
-  region  = var.region
-}
-
-provider "kubernetes" {
-  host                   = module.gke.endpoint
-  cluster_ca_certificate = base64decode(module.gke.ca_certificate)
-  token                  = data.google_client_config.default.access_token
-}
-
 # Example GKE cluster (if you don’t already have one)
 module "gke" {
   source     = "terraform-google-modules/kubernetes-engine/google"
