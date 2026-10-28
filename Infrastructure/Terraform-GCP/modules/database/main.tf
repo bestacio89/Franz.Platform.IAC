@@ -1,63 +1,3 @@
-# Variables
-variable "database_type" {
-  description = "Type of database (cloudsql, firestore, mongo_atlas, mongo_vm)"
-  type        = string
-}
-
-variable "db_instance_name" {
-  description = "Name of the Cloud SQL instance (if using Cloud SQL)"
-  type        = string
-  default     = "microservice-db"
-}
-
-variable "db_version" {
-  description = "Database version for Cloud SQL"
-  type        = string
-}
-
-variable "db_tier" {
-  description = "Machine type (e.g., db-f1-micro, db-n1-standard-1)"
-  type        = string
-}
-
-variable "db_region" {
-  description = "GCP region"
-  type        = string
-}
-
-variable "db_username" {
-  description = "Database admin username"
-  type        = string
-}
-
-variable "db_password" {
-  description = "Database admin password"
-  type        = string
-  sensitive   = true
-}
-
-variable "mongodb_atlas_public_key" {
-  description = "MongoDB Atlas Public Key"
-  type        = string
-}
-
-variable "mongodb_atlas_private_key" {
-  description = "MongoDB Atlas Private Key"
-  type        = string
-  sensitive   = true
-}
-
-variable "mongodb_org_id" {
-  description = "MongoDB Atlas Organization ID"
-  type        = string
-}
-
-variable "firestore_enabled" {
-  description = "Enable Firestore if using NoSQL"
-  type        = bool
-  default     = false
-}
-
 resource "google_sql_database_instance" "microservice_db" {
   count            = var.database_type == "cloudsql" ? 1 : 0
   name             = var.db_instance_name
@@ -66,9 +6,9 @@ resource "google_sql_database_instance" "microservice_db" {
 
   settings {
     tier            = var.db_tier
-    disk_autoresize = true
-    disk_size       = 20
     availability_type = "REGIONAL"
+    disk_autoresize   = true
+    disk_size         = 20
 
     backup_configuration {
       enabled    = true
@@ -109,14 +49,14 @@ resource "mongodbatlas_project" "mongo_project" {
 }
 
 resource "mongodbatlas_cluster" "mongo_cluster" {
-  count                  = var.database_type == "mongo_atlas" ? 1 : 0
-  project_id             = mongodbatlas_project.mongo_project[0].id
-  name                   = "microservice-cluster"
-  provider_name          = "GCP"
-  backing_provider_name  = "GCP"
-  provider_region_name   = var.db_region
+  count                      = var.database_type == "mongo_atlas" ? 1 : 0
+  project_id                 = mongodbatlas_project.mongo_project[0].id
+  name                       = "microservice-cluster"
+  provider_name              = "GCP"
+  backing_provider_name      = "GCP"
+  provider_region_name       = var.db_region
   provider_instance_size_name = "M10"
-  mongo_db_major_version = "6.0"
+  mongo_db_major_version     = "6.0"
 }
 
 resource "mongodbatlas_database_user" "mongo_user" {
