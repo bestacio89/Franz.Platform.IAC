@@ -39,13 +39,4 @@ resource "aws_dynamodb_table" "microservice_dynamodb" {
     { Name = "${var.microservice_name}-dynamodb" }
   )
 }
-
-output "rds_endpoint" {
-  description = "RDS endpoint when a relational database is selected."
-  value       = try(aws_db_instance.microservice_rds[0].endpoint, null)
-}
-
-output "dynamodb_table_name" {
-  description = "DynamoDB table name when DynamoDB is selected."
-  value       = try(aws_dynamodb_table.microservice_dynamodb[0].name, null)
-}
+\n
