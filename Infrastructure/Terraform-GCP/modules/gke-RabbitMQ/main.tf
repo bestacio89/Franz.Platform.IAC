@@ -1,12 +1,12 @@
 # Example GKE cluster (if you don’t already have one)
 module "gke" {
-  source         = "terraform-google-modules/kubernetes-engine/google"
-  project_id     = var.project_id
-  name           = "franz-gke"
-  region         = var.region
-  network        = var.network
-  subnetwork     = var.subnetwork
-  ip_range_pods  = "pods"
+  source        = "terraform-google-modules/kubernetes-engine/google"
+  project_id    = var.project_id
+  name          = "franz-gke"
+  region        = var.region
+  network       = var.network
+  subnetwork    = var.subnetwork
+  ip_range_pods = "pods"
 }
 
 # RabbitMQ Namespace
