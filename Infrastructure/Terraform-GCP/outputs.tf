@@ -32,5 +32,5 @@ output "messaging_summary" {
 
 output "microservice_url" {
   description = "Microservice URL exposed by the selected compute module"
-  value       = var.use_gke ? try(module.gke_microservices[0].service_url, null) : try(module.cloudrun[0].service_url, null)
+  value       = var.use_gke ? try(module.gke_microservices[0].microservice_service_external_ip, null) : try(module.cloudrun[0].service_url, null)
 }
