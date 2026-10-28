@@ -42,17 +42,21 @@ resource "kubernetes_deployment" "kafka" {
         container {
           name  = "kafka"
           image = "bitnami/kafka:latest"
-          ports {
+
+          port {
             container_port = 9092
           }
+
           env {
             name  = "KAFKA_ZOOKEEPER_CONNECT"
             value = "zookeeper:2181"
           }
+
           env {
             name  = "KAFKA_ADVERTISED_LISTENERS"
             value = "PLAINTEXT://kafka-service.default.svc.cluster.local:9092"
           }
+
           resources {
             limits = {
               cpu    = "1000m"
