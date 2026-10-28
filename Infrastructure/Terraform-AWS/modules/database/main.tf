@@ -39,4 +39,3 @@ resource "aws_dynamodb_table" "microservice_dynamodb" {
     { Name = "${var.microservice_name}-dynamodb" }
   )
 }
-\n
