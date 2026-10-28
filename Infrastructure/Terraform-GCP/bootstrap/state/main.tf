@@ -15,7 +15,7 @@ variable "project_id" {
 }
 
 variable "gcp_region" {
-  description = "Region used for the state bucket."
+  description = "Location used for the state bucket (for example EU or europe-west1)."
   type        = string
   default     = "EU"
 }
@@ -56,15 +56,6 @@ resource "google_storage_bucket" "terraform_state" {
     environment = var.environment
     managed_by  = "terraform"
     purpose     = "terraform-state"
-  }
-
-  lifecycle_rule {
-    condition {
-      age = 365
-    }
-    action {
-      type = "AbortIncompleteMultipartUpload"
-    }
   }
 }
 
