@@ -1,32 +1,77 @@
-# Microservices deployment - choose Cloud Run or GKE
-module "microservices" {
-  source = var.use_gke ? "./modules/gke" : "./modules/cloudrun"
-
-  project_id        = var.project_id
-  gcp_region        = var.gcp_region
-  environment       = var.environment
-  microservice_name = "${var.microservice_name}-${var.environment}"
-  container_image   = var.container_image
-  vpc_id            = module.networking.vpc_id
+provider "google" {
+  project = var.project_id
+  region  = var.gcp_region
 }
 
-# Messaging choice
-module "kafka" {
-  count  = var.messaging_type == "kafka" || var.messaging_type == "both" ? 1 : 0
-  source = var.use_gke ? "./modules/gke-kafka" : "./modules/kafka"
+provider "confluent" {
+  cloud_api_key    = var.confluent_api_key
+  cloud_api_secret = var.confluent_api_secret
+}
 
-  project_id         = var.project_id
+provider "mongodbatlas" {
+  public_key  = var.mongodb_atlas_public_key
+  private_key = var.mongodb_atlas_private_key
+}
+
+module "networking" {
+  source     = "./modules/networking"
+  gcp_region = var.gcp_region
+  vpc_name   = "${var.microservice_name}-${var.environment}"
+  enable_ssh = false
+}
+
+module "database" {
+  source                    = "./modules/database"
+  database_type             = var.database_type
+  db_region                 = var.gcp_region
+  db_username               = var.db_username
+  db_password               = var.db_password
+  db_instance_name          = "${var.microservice_name}-${var.environment}-db"
+  mongodb_atlas_public_key  = var.mongodb_atlas_public_key
+  mongodb_atlas_private_key = var.mongodb_atlas_private_key
+  mongodb_org_id            = var.mongodb_org_id
+}
+
+module "cloudrun" {
+  count                 = var.use_gke ? 0 : 1
+  source                = "./modules/cloudrun"
+  gcp_region            = var.gcp_region
+  microservice_name     = "${var.microservice_name}-${var.environment}"
+  container_image       = var.container_image
+  allow_unauthenticated = false
+}
+
+module "gke_microservices" {
+  count             = var.use_gke ? 1 : 0
+  source            = "./modules/gke"
+  gcp_region        = var.gcp_region
+  microservice_name = "${var.microservice_name}-${var.environment}"
+  container_image   = var.container_image
+}
+
+module "confluent_kafka" {
+  count                = contains(["kafka", "both"], var.messaging_type) && !var.use_gke_kafka ? 1 : 0
+  source               = "./modules/kafka"
+  gcp_region           = var.gcp_region
+  kafka_cluster_name   = "${var.kafka_cluster_name}-${var.environment}"
+  confluent_api_key    = var.confluent_api_key
+  confluent_api_secret = var.confluent_api_secret
+}
+
+module "gke_kafka" {
+  count              = contains(["kafka", "both"], var.messaging_type) && var.use_gke_kafka ? 1 : 0
+  source             = "./modules/gke-kafka"
   gcp_region         = var.gcp_region
   kafka_cluster_name = "${var.kafka_cluster_name}-${var.environment}"
 }
 
 module "rabbitmq" {
-  count  = var.messaging_type == "rabbitmq" || var.messaging_type == "both" ? 1 : 0
-  source = var.use_gke ? "./modules/gke-RabbitMQ" : "./modules/RabbitMQ"
-
-  project_id  = var.project_id
-  gcp_region  = var.gcp_region
-  name        = "${var.rabbitmq_name}-${var.environment}"
-  admin_user  = var.rabbitmq_user
-  admin_pass  = var.rabbitmq_password
+  count             = contains(["rabbitmq", "both"], var.messaging_type) ? 1 : 0
+  source            = "./modules/gke-RabbitMQ"
+  project_id        = var.project_id
+  region            = var.gcp_region
+  network           = module.networking.vpc_id
+  subnetwork        = module.networking.private_subnet_id
+  rabbitmq_user     = var.rabbitmq_user
+  rabbitmq_password = var.rabbitmq_password
 }

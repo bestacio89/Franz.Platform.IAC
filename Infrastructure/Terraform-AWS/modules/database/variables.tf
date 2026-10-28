@@ -8,18 +8,9 @@ variable "microservice_name" {
 }
 
 variable "database_type" {
-  description = <<EOT
-Database type to deploy.
-Options:
-- Relational: postgres, mysql, mariadb, oracle, sqlserver
-- NoSQL: dynamodb
-EOT
-  type = string
+  description = "Database type: postgres, mysql, mariadb, oracle, sqlserver, or dynamodb"
+  type        = string
 }
-
-#######################################
-# RDS Variables
-#######################################
 
 variable "db_allocated_storage" {
   description = "Allocated storage in GB for RDS instances"
@@ -34,7 +25,7 @@ variable "db_instance_class" {
 }
 
 variable "db_version" {
-  description = "Database engine version for RDS"
+  description = "Database version for RDS instances"
   type        = string
 }
 
@@ -44,38 +35,36 @@ variable "db_name" {
 }
 
 variable "db_username" {
-  description = "Master username for RDS"
+  description = "Database username for RDS"
   type        = string
 }
 
 variable "db_password" {
-  description = "Master password for RDS"
+  description = "Database password for RDS"
   type        = string
   sensitive   = true
 }
 
 variable "db_public_access" {
-  description = "Should the RDS instance be publicly accessible?"
+  description = "Whether the RDS instance is publicly accessible"
   type        = bool
   default     = false
 }
 
-#######################################
-# DynamoDB Variables
-#######################################
-
 variable "dynamodb_table_name" {
-  description = "Base name of the DynamoDB table"
+  description = "Base name for the DynamoDB table"
   type        = string
   default     = "microservice-table"
 }
-
-#######################################
-# Common Tags
-#######################################
 
 variable "common_tags" {
   description = "Tags to apply to all resources"
   type        = map(string)
   default     = {}
+}
+
+variable "environment" {
+  description = "Deployment environment used for lifecycle safeguards"
+  type        = string
+  default     = "dev"
 }

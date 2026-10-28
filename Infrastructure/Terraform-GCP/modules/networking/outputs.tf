@@ -15,9 +15,9 @@ output "private_subnet_id" {
 
 output "firewall_rules" {
   value = {
-    http_https    = google_compute_firewall.allow_http_https.name
-    ssh           = var.enable_ssh ? google_compute_firewall.allow_ssh[0].name : null
-    microservice  = google_compute_firewall.allow_microservice.name
+    http_https   = google_compute_firewall.allow_http_https.name
+    ssh          = var.enable_ssh ? google_compute_firewall.allow_ssh[0].name : null
+    microservice = google_compute_firewall.allow_microservice.name
   }
   description = "Firewall rules created in this VPC"
 }

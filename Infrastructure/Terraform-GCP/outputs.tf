@@ -1,46 +1,36 @@
-########################################
-# 🌍 Networking
-########################################
 output "vpc_id" {
-  value       = module.networking.vpc_id
   description = "VPC ID for networking"
+  value       = module.networking.vpc_id
 }
 
-########################################
-# 🗄️ Database
-########################################
 output "database_endpoint" {
-  value       = module.database.db_endpoint
-  description = "Database connection endpoint"
+  description = "Database endpoint or connection identifier"
+  value = (
+    var.database_type == "cloudsql" ? module.database.cloudsql_connection_name :
+    var.database_type == "mongo_atlas" ? module.database.mongo_atlas_cluster_uri :
+    var.database_type == "mongo_vm" ? module.database.mongo_vm_public_ip :
+    module.database.firestore_database_name
+  )
+  sensitive = true
 }
 
-########################################
-# 📡 Messaging
-########################################
 output "messaging_summary" {
   description = "Active messaging endpoints for this environment"
   value = {
-    kafka = var.messaging_type == "kafka" || var.messaging_type == "both"
-      ? {
-          cluster_id         = try(module.kafka[0].kafka_cluster_id, null)
-          bootstrap_endpoint = try(module.kafka[0].kafka_bootstrap_endpoint, null)
-        }
-      : null
-    rabbitmq = var.messaging_type == "rabbitmq" || var.messaging_type == "both"
-      ? {
-          service_ip       = try(module.rabbitmq[0].rabbitmq_service_ip, null)
-          amqp_port        = try(module.rabbitmq[0].rabbitmq_amqp_port, null)
-          management_port  = try(module.rabbitmq[0].rabbitmq_management_port, null)
-          admin_user       = var.rabbitmq_user
-        }
-      : null
+    kafka = contains(["kafka", "both"], var.messaging_type) ? {
+      cluster_id = var.use_gke_kafka ? null : try(module.confluent_kafka[0].kafka_cluster_id, null)
+      endpoint   = var.use_gke_kafka ? try(module.gke_kafka[0].kafka_gke_service_ip, null) : try(module.confluent_kafka[0].kafka_bootstrap_endpoint, null)
+    } : null
+    rabbitmq = contains(["rabbitmq", "both"], var.messaging_type) ? {
+      service_ip      = try(module.rabbitmq[0].rabbitmq_service_ip, null)
+      amqp_port       = try(module.rabbitmq[0].rabbitmq_amqp_port, null)
+      management_port = try(module.rabbitmq[0].rabbitmq_management_port, null)
+      admin_user      = var.rabbitmq_user
+    } : null
   }
 }
 
-########################################
-# ☸️ Microservices
-########################################
 output "microservice_url" {
-  value       = module.microservices.service_url
-  description = "Microservice public URL (LoadBalancer or Cloud Run URL)"
+  description = "Microservice URL exposed by the selected compute module"
+  value       = var.use_gke ? try(module.gke_microservices[0].microservice_service_external_ip, null) : try(module.cloudrun[0].service_url, null)
 }

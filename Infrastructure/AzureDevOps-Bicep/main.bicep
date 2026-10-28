@@ -52,7 +52,7 @@ param acrId string = ''
 // ========================================
 
 // Kafka
-module kafkaModule './modules/kafka/kafka.bicep' = if (messagingType == 'Kafka' || messagingType == 'Both') {
+module kafkaModule './Modules/kafka/kafka.bicep' = if (messagingType == 'Kafka' || messagingType == 'Both') {
   name: 'kafkaDeployment'
   params: {
     location: location
@@ -64,7 +64,7 @@ module kafkaModule './modules/kafka/kafka.bicep' = if (messagingType == 'Kafka' 
 }
 
 // RabbitMQ
-module rabbitmqModule './modules/rabbitmq/rabbitmq.bicep' = if (messagingType == 'RabbitMQ' || messagingType == 'Both') {
+module rabbitmqModule './Modules/RabbitMQ/rabbitmq.bicep' = if (messagingType == 'RabbitMQ' || messagingType == 'Both') {
   name: 'rabbitmqDeployment'
   params: {
     location: location
@@ -80,7 +80,7 @@ module rabbitmqModule './modules/rabbitmq/rabbitmq.bicep' = if (messagingType ==
 // ========================================
 
 // Multi-DB
-module multiDbModule './modules/Multi/multi-db.bicep' = if (databaseType == 'multi') {
+module multiDbModule './Modules/Multi/multi-db.bicep' = if (databaseType == 'multi') {
   name: 'multiDbDeployment'
   params: {
     location: location
@@ -95,7 +95,7 @@ module multiDbModule './modules/Multi/multi-db.bicep' = if (databaseType == 'mul
 }
 
 // Single-DB
-module singleDbModule './modules/Single/single-db.bicep' = if (databaseType == 'single') {
+module singleDbModule './Modules/Single/single-db.Bicep' = if (databaseType == 'single') {
   name: 'singleDbDeployment'
   params: {
     location: location
@@ -111,7 +111,7 @@ module singleDbModule './modules/Single/single-db.bicep' = if (databaseType == '
 // ========================================
 // 🔹 Key Vault
 // ========================================
-module keyVaultModule './modules/keyvault/keyvault.bicep' = {
+module keyVaultModule './Modules/keyvault/keyvault.bicep' = {
   name: 'keyVaultDeployment'
   params: {
     location: location
@@ -124,7 +124,7 @@ module keyVaultModule './modules/keyvault/keyvault.bicep' = {
 // ========================================
 // 🔹 Optional AKS Cluster
 // ========================================
-module aksModule './modules/aks/aksCluster.bicep' = if (containerOrchestrator == 'aks') {
+module aksModule './Modules/AKS/aksCluster.bicep' = if (containerOrchestrator == 'aks') {
   name: 'aksDeployment'
   params: {
     name: '${microserviceName}-${environment}-aks'

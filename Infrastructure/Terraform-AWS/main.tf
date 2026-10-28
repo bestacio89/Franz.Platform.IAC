@@ -1,36 +1,55 @@
+provider "aws" {
+  region = var.aws_region
+}
+
 module "networking" {
-  source = "./modules/networking"
+  source            = "./modules/networking"
+  microservice_name = var.microservice_name
+  common_tags       = var.common_tags
 }
 
-# ✅ Kafka (MSK)
 module "kafka" {
-  source = "./modules/kafka"
-  count  = var.messaging_type == "Kafka" || var.messaging_type == "Both" ? 1 : 0
-
-  use_msk = var.use_msk
+  count              = contains(["Kafka", "Both"], var.messaging_type) ? 1 : 0
+  source             = "./modules/kafka"
+  use_msk            = var.use_msk
+  microservice_name  = var.microservice_name
+  subnet_ids         = [module.networking.public_subnet_id]
+  security_group_ids = [module.networking.security_group_id]
+  common_tags        = var.common_tags
 }
 
-# ✅ RabbitMQ (Amazon MQ)
 module "rabbitmq" {
-  source = "./modules/rabbitmq"
-  count  = var.messaging_type == "RabbitMQ" || var.messaging_type == "Both" ? 1 : 0
-
-  broker_name     = "${var.microservice_name}-rabbitmq"
-  subnet_ids      = [module.networking.public_subnet_id]
-  security_groups = [module.networking.security_group_id]
-  username        = var.rabbitmq_user
-  password        = var.rabbitmq_password
+  count              = contains(["RabbitMQ", "Both"], var.messaging_type) ? 1 : 0
+  source             = "./modules/RabbitMQ"
+  enable_rabbitmq    = true
+  microservice_name  = var.microservice_name
+  common_tags        = var.common_tags
+  rabbitmq_user      = var.rabbitmq_user
+  rabbitmq_password  = var.rabbitmq_password
+  security_group_ids = [module.networking.security_group_id]
+  subnet_ids         = [module.networking.public_subnet_id]
 }
 
-# ✅ Database
 module "database" {
-  source        = "./modules/database"
-  database_type = var.database_type
-  multi_db      = var.multi_db
+  source               = "./modules/database"
+  microservice_name    = var.microservice_name
+  common_tags          = var.common_tags
+  database_type        = var.database_type
+  db_version           = var.db_version
+  db_name              = var.db_name
+  db_username          = var.db_username
+  db_password          = var.db_password
+  db_allocated_storage = var.db_allocated_storage
+  db_instance_class    = var.db_instance_class
 }
 
-# ✅ Compute (EKS or ECS based on toggle)
 module "compute" {
-  source  = "./modules/ecs" # <— still called ecs module for now
-  use_eks = var.use_eks
+  source             = "./modules/ecs"
+  aws_region         = var.aws_region
+  microservice_name  = var.microservice_name
+  container_image    = var.container_image
+  ecs_execution_role = var.ecs_execution_role
+  ecs_service_sg     = module.networking.security_group_id
+  subnet_ids         = [module.networking.public_subnet_id]
+  common_tags        = var.common_tags
 }

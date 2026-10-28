@@ -92,3 +92,48 @@ variable "rabbitmq_password" {
   type        = string
   sensitive   = true
 }
+
+variable "db_username" {
+  description = "Database username for managed database services"
+  type        = string
+  default     = "franz_admin"
+}
+
+variable "db_password" {
+  description = "Database password for managed database services"
+  type        = string
+  sensitive   = true
+}
+
+variable "mongodb_atlas_public_key" {
+  description = "MongoDB Atlas public API key"
+  type        = string
+  default     = ""
+}
+
+variable "mongodb_atlas_private_key" {
+  description = "MongoDB Atlas private API key"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "mongodb_org_id" {
+  description = "MongoDB Atlas organization ID"
+  type        = string
+  default     = ""
+}
+
+variable "confluent_api_key" {
+  description = "Confluent Cloud API key"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "confluent_api_secret" {
+  description = "Confluent Cloud API secret"
+  type        = string
+  sensitive   = true
+  default     = ""
+}

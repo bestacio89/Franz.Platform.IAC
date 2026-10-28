@@ -1,41 +1,34 @@
-#######################################
-# Networking
-#######################################
 output "vpc_id" {
   description = "VPC ID from networking module"
   value       = module.networking.vpc_id
 }
 
-#######################################
-# Messaging
-#######################################
 output "kafka_broker" {
-  description = "Kafka broker endpoints (if enabled)"
+  description = "Kafka broker endpoints when Kafka is enabled"
   value       = try(module.kafka[0].kafka_broker, null)
 }
 
 output "rabbitmq_endpoints" {
-  description = "RabbitMQ endpoints (if enabled)"
+  description = "RabbitMQ broker endpoints when RabbitMQ is enabled"
   value       = try(module.rabbitmq[0].rabbitmq_endpoints, null)
 }
 
-#######################################
-# Database
-#######################################
 output "database_endpoint" {
-  description = "Database endpoint or table name"
-  value       = try(module.database.db_endpoint, null)
+  description = "RDS endpoint when a relational database is selected"
+  value       = module.database.rds_endpoint
 }
 
-#######################################
-# Compute
-#######################################
+output "dynamodb_table_name" {
+  description = "DynamoDB table name when DynamoDB is selected"
+  value       = module.database.dynamodb_table_name
+}
+
 output "compute_cluster_name" {
-  description = "Name of the compute cluster (EKS or ECS depending on toggle)"
-  value       = try(module.ecs.cluster_name, null)
+  description = "ECS cluster name"
+  value       = module.compute.ecs_cluster_name
 }
 
-output "compute_cluster_endpoint" {
-  description = "Cluster endpoint (EKS API or ECS cluster ARN)"
-  value       = try(module.ecs.cluster_endpoint, null)
+output "compute_service_name" {
+  description = "ECS service name"
+  value       = module.compute.ecs_service_name
 }

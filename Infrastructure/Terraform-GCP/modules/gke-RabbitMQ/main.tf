@@ -1,24 +1,12 @@
-provider "google" {
-  project = var.project_id
-  region  = var.region
-}
-
-provider "kubernetes" {
-  host                   = module.gke.endpoint
-  cluster_ca_certificate = base64decode(module.gke.ca_certificate)
-  token                  = data.google_client_config.default.access_token
-}
-
 # Example GKE cluster (if you don’t already have one)
 module "gke" {
-  source     = "terraform-google-modules/kubernetes-engine/google"
-  project_id = var.project_id
-  name       = "franz-gke"
-  region     = var.region
-  network    = var.network
-  subnetwork = var.subnetwork
-
-  ip_allocation_policy = {}
+  source        = "terraform-google-modules/kubernetes-engine/google"
+  project_id    = var.project_id
+  name          = "franz-gke"
+  region        = var.region
+  network       = var.network
+  subnetwork    = var.subnetwork
+  ip_range_pods = "pods"
 }
 
 # RabbitMQ Namespace
