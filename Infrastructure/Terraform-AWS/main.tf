@@ -9,8 +9,8 @@ module "networking" {
 }
 
 module "kafka" {
-  count  = contains(["Kafka", "Both"], var.messaging_type) ? 1 : 0
-  source = "./modules/kafka"
+  count              = contains(["Kafka", "Both"], var.messaging_type) ? 1 : 0
+  source             = "./modules/kafka"
 
   use_msk            = var.use_msk
   microservice_name  = var.microservice_name
@@ -20,8 +20,8 @@ module "kafka" {
 }
 
 module "rabbitmq" {
-  count  = contains(["RabbitMQ", "Both"], var.messaging_type) ? 1 : 0
-  source = "./modules/RabbitMQ"
+  count              = contains(["RabbitMQ", "Both"], var.messaging_type) ? 1 : 0
+  source             = "./modules/RabbitMQ"
 
   enable_rabbitmq     = true
   microservice_name   = var.microservice_name
@@ -33,7 +33,7 @@ module "rabbitmq" {
 }
 
 module "database" {
-  source = "./modules/database"
+  source             = "./modules/database"
 
   microservice_name    = var.microservice_name
   common_tags          = var.common_tags
@@ -47,7 +47,7 @@ module "database" {
 }
 
 module "compute" {
-  source = "./modules/ecs"
+  source             = "./modules/ecs"
 
   aws_region         = var.aws_region
   microservice_name  = var.microservice_name
