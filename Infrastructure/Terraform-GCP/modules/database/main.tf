@@ -5,10 +5,10 @@ resource "google_sql_database_instance" "microservice_db" {
   database_version = var.db_version
 
   settings {
-    tier                = var.db_tier
-    availability_type   = "REGIONAL"
-    disk_autoresize     = true
-    disk_size           = 20
+    tier              = var.db_tier
+    availability_type = "REGIONAL"
+    disk_autoresize   = true
+    disk_size         = 20
 
     backup_configuration {
       enabled    = true
@@ -49,14 +49,14 @@ resource "mongodbatlas_project" "mongo_project" {
 }
 
 resource "mongodbatlas_cluster" "mongo_cluster" {
-  count                      = var.database_type == "mongo_atlas" ? 1 : 0
-  project_id                 = mongodbatlas_project.mongo_project[0].id
-  name                       = "microservice-cluster"
-  provider_name              = "GCP"
-  backing_provider_name      = "GCP"
-  provider_region_name       = var.db_region
+  count                       = var.database_type == "mongo_atlas" ? 1 : 0
+  project_id                  = mongodbatlas_project.mongo_project[0].id
+  name                        = "microservice-cluster"
+  provider_name               = "GCP"
+  backing_provider_name       = "GCP"
+  provider_region_name        = var.db_region
   provider_instance_size_name = "M10"
-  mongo_db_major_version     = "6.0"
+  mongo_db_major_version      = "6.0"
 }
 
 resource "mongodbatlas_database_user" "mongo_user" {
