@@ -45,3 +45,15 @@ module "database" {
   db_allocated_storage = var.db_allocated_storage
   db_instance_class    = var.db_instance_class
 }
+
+module "compute" {
+  source = "./modules/ecs"
+
+  aws_region         = var.aws_region
+  microservice_name  = var.microservice_name
+  container_image    = var.container_image
+  ecs_execution_role = var.ecs_execution_role
+  ecs_service_sg     = module.networking.security_group_id
+  subnet_ids         = [module.networking.public_subnet_id]
+  common_tags        = var.common_tags
+}
