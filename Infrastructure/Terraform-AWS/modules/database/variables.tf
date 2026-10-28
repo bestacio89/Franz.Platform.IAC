@@ -8,18 +8,9 @@ variable "microservice_name" {
 }
 
 variable "database_type" {
-  description = <<-EOT
-    Database type to deploy.
-    Options:
-    - Relational: postgres, mysql, mariadb, oracle, sqlserver
-    - NoSQL: dynamodb
-  EOT
-  type = string
+  description = "Database type: postgres, mysql, mariadb, oracle, sqlserver, or dynamodb"
+  type        = string
 }
-
-#######################################
-# RDS Variables
-#######################################
 
 variable "db_allocated_storage" {
   description = "Allocated storage in GB for RDS instances"
@@ -60,19 +51,11 @@ variable "db_public_access" {
   default     = false
 }
 
-#######################################
-# DynamoDB Variables
-#######################################
-
 variable "dynamodb_table_name" {
   description = "Base name for the DynamoDB table"
   type        = string
   default     = "microservice-table"
 }
-
-#######################################
-# Common Tags
-#######################################
 
 variable "common_tags" {
   description = "Tags to apply to all resources"
