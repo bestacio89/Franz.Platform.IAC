@@ -86,3 +86,13 @@ variable "db_instance_class" {
   type        = string
   default     = "db.t3.micro"
 }
+
+variable "container_image" {
+  description = "Immutable container image reference for the workload"
+  type        = string
+}
+
+variable "ecs_execution_role" {
+  description = "IAM execution role ARN for ECS tasks"
+  type        = string
+}
