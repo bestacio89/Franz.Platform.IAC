@@ -12,7 +12,7 @@ module "microservices" {
 
 # Messaging choice
 module "kafka" {
-  count  = var.messaging_type == "kafka" || var.messaging_type == "both" ? 1 : 0
+  count  = contains(["kafka", "both"], var.messaging_type) ? 1 : 0
   source = var.use_gke ? "./modules/gke-kafka" : "./modules/kafka"
 
   project_id         = var.project_id
@@ -21,12 +21,12 @@ module "kafka" {
 }
 
 module "rabbitmq" {
-  count  = var.messaging_type == "rabbitmq" || var.messaging_type == "both" ? 1 : 0
+  count  = contains(["rabbitmq", "both"], var.messaging_type) ? 1 : 0
   source = var.use_gke ? "./modules/gke-RabbitMQ" : "./modules/RabbitMQ"
 
-  project_id  = var.project_id
-  gcp_region  = var.gcp_region
-  name        = "${var.rabbitmq_name}-${var.environment}"
-  admin_user  = var.rabbitmq_user
-  admin_pass  = var.rabbitmq_password
+  project_id = var.project_id
+  gcp_region = var.gcp_region
+  name       = "${var.rabbitmq_name}-${var.environment}"
+  admin_user = var.rabbitmq_user
+  admin_pass = var.rabbitmq_password
 }
