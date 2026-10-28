@@ -5,9 +5,8 @@ module "gke" {
   name       = "franz-gke"
   region     = var.region
   network    = var.network
-  subnetwork = var.subnetwork
-
-  ip_allocation_policy = {}
+  subnetwork   = var.subnetwork
+  ip_range_pods = "pods"
 }
 
 # RabbitMQ Namespace
