@@ -4,10 +4,10 @@ provider "confluent" {
 }
 
 resource "confluent_kafka_cluster" "kafka" {
-  name          = var.kafka_cluster_name
-  cloud         = "GCP"
-  region        = var.gcp_region
-  availability  = var.availability
+  name         = var.kafka_cluster_name
+  cloud        = "GCP"
+  region       = var.gcp_region
+  availability = var.availability
 
   dedicated {
     ckus = var.ckus
