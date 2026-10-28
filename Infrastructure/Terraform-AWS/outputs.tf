@@ -22,3 +22,13 @@ output "dynamodb_table_name" {
   description = "DynamoDB table name when DynamoDB is selected"
   value       = module.database.dynamodb_table_name
 }
+
+output "compute_cluster_name" {
+  description = "ECS cluster name"
+  value       = module.compute.ecs_cluster_name
+}
+
+output "compute_service_name" {
+  description = "ECS service name"
+  value       = module.compute.ecs_service_name
+}
