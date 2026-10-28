@@ -64,7 +64,7 @@ module kafkaModule './Modules/kafka/kafka.bicep' = if (messagingType == 'Kafka' 
 }
 
 // RabbitMQ
-module rabbitmqModule './Modules/rabbitmq/rabbitmq.bicep' = if (messagingType == 'RabbitMQ' || messagingType == 'Both') {
+module rabbitmqModule './Modules/RabbitMQ/rabbitmq.bicep' = if (messagingType == 'RabbitMQ' || messagingType == 'Both') {
   name: 'rabbitmqDeployment'
   params: {
     location: location
@@ -124,7 +124,7 @@ module keyVaultModule './Modules/keyvault/keyvault.bicep' = {
 // ========================================
 // 🔹 Optional AKS Cluster
 // ========================================
-module aksModule './Modules/aks/aksCluster.bicep' = if (containerOrchestrator == 'aks') {
+module aksModule './Modules/AKS/aksCluster.bicep' = if (containerOrchestrator == 'aks') {
   name: 'aksDeployment'
   params: {
     name: '${microserviceName}-${environment}-aks'
