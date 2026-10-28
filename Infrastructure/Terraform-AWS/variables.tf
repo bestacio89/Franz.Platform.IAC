@@ -1,13 +1,10 @@
-#######################################
-# Global
-#######################################
 variable "aws_region" {
   description = "AWS region"
   type        = string
 }
 
 variable "microservice_name" {
-  description = "Name of the microservice (used in resource naming)"
+  description = "Name of the microservice"
   type        = string
 }
 
@@ -17,17 +14,18 @@ variable "common_tags" {
   default     = {}
 }
 
-#######################################
-# Messaging
-#######################################
 variable "messaging_type" {
   description = "Messaging layer to deploy: Kafka, RabbitMQ, Both, or None"
   type        = string
   default     = "None"
+  validation {
+    condition     = contains(["Kafka", "RabbitMQ", "Both", "None"], var.messaging_type)
+    error_message = "messaging_type must be Kafka, RabbitMQ, Both, or None."
+  }
 }
 
 variable "use_msk" {
-  description = "Use Amazon MSK for Kafka (true) or self-managed alternative (false)"
+  description = "Whether to deploy Amazon MSK when Kafka is selected"
   type        = bool
   default     = true
 }
@@ -44,25 +42,47 @@ variable "rabbitmq_password" {
   sensitive   = true
 }
 
-#######################################
-# Database
-#######################################
 variable "database_type" {
-  description = "Database type: postgres, mysql, mariadb, oracle, mssql, dynamodb"
+  description = "Database type: postgres, mysql, mariadb, oracle, sqlserver, or dynamodb"
   type        = string
+  validation {
+    condition     = contains(["postgres", "mysql", "mariadb", "oracle", "sqlserver", "dynamodb"], var.database_type)
+    error_message = "database_type must be a supported RDS engine or dynamodb."
+  }
 }
 
-variable "multi_db" {
-  description = "Enable multiple databases support (true/false)"
-  type        = bool
-  default     = false
+variable "db_version" {
+  description = "Database engine version"
+  type        = string
+  default     = "16.4"
 }
 
-#######################################
-# Compute
-#######################################
-variable "use_eks" {
-  description = "If true, deploy EKS. If false, deploy ECS"
-  type        = bool
-  default     = true
+variable "db_name" {
+  description = "Initial database name"
+  type        = string
+  default     = "microservice"
+}
+
+variable "db_username" {
+  description = "Database administrator username"
+  type        = string
+  default     = "dbadmin"
+}
+
+variable "db_password" {
+  description = "Database administrator password"
+  type        = string
+  sensitive   = true
+}
+
+variable "db_allocated_storage" {
+  description = "Allocated RDS storage in GB"
+  type        = number
+  default     = 20
+}
+
+variable "db_instance_class" {
+  description = "RDS instance class"
+  type        = string
+  default     = "db.t3.micro"
 }
