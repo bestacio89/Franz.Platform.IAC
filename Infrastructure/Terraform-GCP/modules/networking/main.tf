@@ -18,6 +18,11 @@ resource "google_compute_subnetwork" "private_subnet" {
   network       = google_compute_network.main_vpc.id
   ip_cidr_range = var.private_subnet_cidr
   region        = var.gcp_region
+
+  secondary_ip_range {
+    range_name    = "pods"
+    ip_cidr_range = "10.20.0.0/16"
+  }
 }
 
 # ✅ Firewall for HTTP/HTTPS
