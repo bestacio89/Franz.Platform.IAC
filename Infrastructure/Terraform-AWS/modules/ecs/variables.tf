@@ -51,6 +51,11 @@ variable "ecs_execution_role" {
   type        = string
 }
 
+variable "subnet_ids" {
+  description = "Subnet IDs where ECS tasks are deployed"
+  type        = list(string)
+}
+
 variable "ecs_service_sg" {
   description = "Security group ID for ECS service"
   type        = string
