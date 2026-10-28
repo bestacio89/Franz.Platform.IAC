@@ -1,6 +1,3 @@
-variable "gcp_region" {}
-variable "kafka_cluster_name" {}
-
 resource "google_container_cluster" "kafka_gke" {
   name     = "kafka-gke-cluster"
   location = var.gcp_region
