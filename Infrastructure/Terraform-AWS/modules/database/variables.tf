@@ -62,3 +62,9 @@ variable "common_tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "environment" {
+  description = "Deployment environment used for lifecycle safeguards"
+  type        = string
+  default     = "dev"
+}
