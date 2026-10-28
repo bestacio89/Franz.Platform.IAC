@@ -1,14 +1,13 @@
 resource "aws_mq_broker" "rabbitmq" {
   count = var.enable_rabbitmq ? 1 : 0
 
-  broker_name        = "${var.microservice_name}-rabbitmq"
-  engine_type        = "RabbitMQ"
-  engine_version     = var.rabbitmq_version
-  host_instance_type = var.rabbitmq_instance_type
-
-  publicly_accessible = false
+  broker_name                = "${var.microservice_name}-rabbitmq"
+  engine_type                = "RabbitMQ"
+  engine_version             = var.rabbitmq_version
+  host_instance_type         = var.rabbitmq_instance_type
+  publicly_accessible        = false
   auto_minor_version_upgrade = true
-  deployment_mode    = "SINGLE_INSTANCE"
+  deployment_mode            = "SINGLE_INSTANCE"
 
   user {
     username = var.rabbitmq_user
@@ -24,6 +23,6 @@ resource "aws_mq_broker" "rabbitmq" {
 
   tags = merge(
     var.common_tags,
-    { "Name" = "${var.microservice_name}-rabbitmq" }
+    { Name = "${var.microservice_name}-rabbitmq" }
   )
 }
