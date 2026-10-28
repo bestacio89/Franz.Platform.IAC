@@ -55,10 +55,11 @@ resource "mongodbatlas_cluster" "mongo_cluster" {
 }
 
 resource "mongodbatlas_database_user" "mongo_user" {
-  count      = var.database_type == "mongo_atlas" ? 1 : 0
-  username   = var.db_username
-  password   = var.db_password
-  project_id = mongodbatlas_project.mongo_project[0].id
+  count              = var.database_type == "mongo_atlas" ? 1 : 0
+  username           = var.db_username
+  password           = var.db_password
+  project_id          = mongodbatlas_project.mongo_project[0].id
+  auth_database_name = "admin"
 
   roles {
     role_name     = "readWrite"
