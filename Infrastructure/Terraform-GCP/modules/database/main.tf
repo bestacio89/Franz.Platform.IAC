@@ -37,11 +37,6 @@ resource "google_firestore_database" "microservice_firestore" {
   type        = "FIRESTORE_NATIVE"
 }
 
-provider "mongodbatlas" {
-  public_key  = var.mongodb_atlas_public_key
-  private_key = var.mongodb_atlas_private_key
-}
-
 resource "mongodbatlas_project" "mongo_project" {
   count  = var.database_type == "mongo_atlas" ? 1 : 0
   name   = "microservice-mongo"
