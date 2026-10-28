@@ -25,7 +25,6 @@ module "database" {
 module "cloudrun" {
   count                 = var.use_gke ? 0 : 1
   source                = "./modules/cloudrun"
-
   gcp_region            = var.gcp_region
   microservice_name     = "${var.microservice_name}-${var.environment}"
   container_image       = var.container_image
@@ -35,7 +34,6 @@ module "cloudrun" {
 module "gke_microservices" {
   count             = var.use_gke ? 1 : 0
   source            = "./modules/gke"
-
   gcp_region        = var.gcp_region
   microservice_name = "${var.microservice_name}-${var.environment}"
   container_image   = var.container_image
@@ -44,7 +42,6 @@ module "gke_microservices" {
 module "confluent_kafka" {
   count                = contains(["kafka", "both"], var.messaging_type) && !var.use_gke_kafka ? 1 : 0
   source               = "./modules/kafka"
-
   gcp_region           = var.gcp_region
   kafka_cluster_name   = "${var.kafka_cluster_name}-${var.environment}"
   confluent_api_key    = var.confluent_api_key
@@ -54,7 +51,6 @@ module "confluent_kafka" {
 module "gke_kafka" {
   count              = contains(["kafka", "both"], var.messaging_type) && var.use_gke_kafka ? 1 : 0
   source             = "./modules/gke-kafka"
-
   gcp_region         = var.gcp_region
   kafka_cluster_name = "${var.kafka_cluster_name}-${var.environment}"
 }
@@ -62,7 +58,6 @@ module "gke_kafka" {
 module "rabbitmq" {
   count             = contains(["rabbitmq", "both"], var.messaging_type) ? 1 : 0
   source            = "./modules/gke-RabbitMQ"
-
   project_id        = var.project_id
   region            = var.gcp_region
   network           = module.networking.vpc_id
