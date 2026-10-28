@@ -3,6 +3,16 @@ provider "google" {
   region  = var.gcp_region
 }
 
+provider "confluent" {
+  cloud_api_key    = var.confluent_api_key
+  cloud_api_secret = var.confluent_api_secret
+}
+
+provider "mongodbatlas" {
+  public_key  = var.mongodb_atlas_public_key
+  private_key = var.mongodb_atlas_private_key
+}
+
 module "networking" {
   source     = "./modules/networking"
   gcp_region = var.gcp_region
